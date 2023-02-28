@@ -1,22 +1,36 @@
-precision highp float;
-
-uniform vec4 outputFrame;
-uniform sampler2D uSampler;
+precision mediump float;
 
 varying vec2 vTextureCoord;
 
+uniform sampler2D uSampler;
+
+uniform vec4 filterArea;
 uniform float maxPixelSize;
 
-void main() {
-  vec2 uv = vTextureCoord;
+vec2 mapCoord(vec2 coord) {
+  coord *= filterArea.xy;
+  coord += filterArea.zw;
 
-  vec2 pixelSize = 1.0 / (outputFrame.zw / maxPixelSize);
+  return coord;
+}
 
-  // add pxResolution / 2 to fix image position.
-  vec2 fixedUV = uv + pixelSize / 2.0;
+vec2 unmapCoord(vec2 coord) {
+  coord -= filterArea.zw;
+  coord /= filterArea.xy;
 
-  // Pixelated UV coordinates
-  vec2 pxUV = floor(fixedUV / pixelSize) * pixelSize;
+  return coord;
+}
 
-  gl_FragColor = texture2D(uSampler, pxUV);
+vec2 pixelate(vec2 coord, vec2 size) {
+  return floor(coord / size) * size;
+}
+
+void main(void) {
+  vec2 coord = mapCoord(vTextureCoord);
+
+  coord = pixelate(coord, vec2(maxPixelSize, maxPixelSize));
+
+  coord = unmapCoord(coord);
+
+  gl_FragColor = texture2D(uSampler, coord);
 }

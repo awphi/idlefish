@@ -25,6 +25,10 @@ export class Interactions {
     boats: Map<PIXI.Container, Boat>
   ) {
     app.stage.on("pointerdown", (e) => {
+      if (e.button !== 0) {
+        return;
+      }
+
       if (e.target instanceof PIXI.Container && boats.has(e.target)) {
         const boat = boats.get(e.target)!;
         this._selectedBoat = boat;
@@ -34,20 +38,26 @@ export class Interactions {
     });
 
     app.stage.on("pointermove", (e) => {
-      this._mousePos.set(e.x, e.y);
-      this._isDragPathValid =
-        this._selectedBoat !== null &&
-        e.target !== this._selectedBoat.container;
+      if (e.target instanceof PIXI.DisplayObject) {
+        e.target.toLocal({ x: e.x, y: e.y }, app.stage, this._mousePos);
+        this._isDragPathValid =
+          this._selectedBoat !== null &&
+          e.target !== this._selectedBoat.container;
+      }
     });
 
     app.stage.on("pointerup", (e) => {
+      if (e.button !== 0) {
+        return;
+      }
+
       if (e.target instanceof PIXI.Container && boats.has(e.target)) {
         events.fire("select", "boat", boats.get(e.target));
       }
 
       if (this._selectedBoat !== null) {
         if (this.isDragPathValid) {
-          this._selectedBoat.moveTo(e.x, e.y);
+          this._selectedBoat.moveTo(this.mousePos.x, this.mousePos.y);
         }
         this._selectedBoat = null;
       } else {

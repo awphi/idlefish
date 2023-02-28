@@ -8,7 +8,9 @@ export interface FishingLineLayer {
   refresh: (boats: IterableIterator<Boat>) => void;
 }
 
-export function makeFishingLineLayer(): FishingLineLayer {
+export function makeFishingLineLayer(
+  viewport: PIXI.DisplayObject
+): FishingLineLayer {
   const g = new PIXI.Graphics();
   const linePositions: Map<FishingLineState, IPointData> = new Map();
 
@@ -33,8 +35,8 @@ export function makeFishingLineLayer(): FishingLineLayer {
     const lineRandomnessY = (Math.random() - 0.5) * 2 * lineRandomness;
 
     const pos = {
-      x: seatPos.x + d.x * lineLength + lineRandomnessX,
-      y: seatPos.y + d.y * lineLength + lineRandomnessY,
+      x: d.x * lineLength + lineRandomnessX,
+      y: d.y * lineLength + lineRandomnessY,
     };
 
     linePositions.set(state, pos);
@@ -53,18 +55,19 @@ export function makeFishingLineLayer(): FishingLineLayer {
 
       const seatPosUV = boat.boatDef.seats[i];
 
-      boat.container.toGlobal(
+      viewport.toLocal(
         {
           x: seatPosUV[0] * boat.container.width,
           y: seatPosUV[1] * boat.container.height,
         },
+        boat.container,
         seatPos
       );
 
       const linePos = getLinePosition(boat, lineState, seatPos);
       g.lineStyle(1, 0x000000, 1);
       g.moveTo(seatPos.x, seatPos.y);
-      g.lineTo(linePos.x, linePos.y);
+      g.lineTo(seatPos.x + linePos.x, seatPos.y + linePos.y);
     }
   }
 

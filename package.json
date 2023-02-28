@@ -33,6 +33,7 @@
     "@pixi/particle-emitter": "^5.0.8",
     "howler": "^2.2.3",
     "nanoid": "^4.0.1",
+    "pixi-viewport": "^5.0.0",
     "pixi.js": "^7.1.3"
   }
 }

@@ -36,3 +36,6 @@ export function weightedRandom(weights: {
 export function closeTo(x: number, y: number, epsilon = 1e-2): boolean {
   return y > x - epsilon && y < x + epsilon;
 }
+
+export const worldWidth = 10000;
+export const worldHeight = 10000;

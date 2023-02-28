@@ -7,6 +7,7 @@ import type { BoatDef } from "./boat-def";
 import { Fisher, type FishingStatus } from "./fisher";
 import type { Fish } from "./fish";
 import type { Events } from "./events";
+import type { Game } from "./game-controller";
 
 type BoatStatus = "rotating" | "moving" | "idle";
 
@@ -27,7 +28,7 @@ export class Boat {
   private _desiredRotation: number;
   private _heading: PIXI.Point = new PIXI.Point(0, 0);
   private _wakeEmitters: particles.Emitter[] = [];
-  private _events: Events;
+  private _game: Game;
 
   public get status(): BoatStatus {
     return this._status;
@@ -69,8 +70,8 @@ export class Boat {
   public addFish(fish: Fish, updateFishers = true): boolean {
     if (!this.isInventoryFull()) {
       this._inventory.push(fish);
-      this._events.fire("boat-update", this);
-      this._events.fire("boat-catch", this, fish);
+      this._game.events.fire("boat-update", this);
+      this._game.events.fire("boat-catch", this, fish);
       return true;
     }
 
@@ -83,12 +84,12 @@ export class Boat {
     return false;
   }
 
-  public constructor(app: PIXI.Application, events: Events, boatDef: BoatDef) {
+  public constructor(game: Game, boatDef: BoatDef) {
+    this._game = game;
     this._boatDef = boatDef;
-    this._events = events;
     this._fishers = Array.from(
       { length: boatDef.seats.length },
-      () => new Fisher(this, app)
+      () => new Fisher(this, game.app)
     );
 
     const container = new PIXI.Container();
@@ -104,7 +105,7 @@ export class Boat {
 
       this._boatDef.wakeEmitters.forEach(() => {
         const emitter = new particles.Emitter(
-          app.stage,
+          game.viewport,
           particles.upgradeConfig(wakeParticlesEmitterDef, [PIXI.Texture.WHITE])
         );
 
@@ -115,10 +116,10 @@ export class Boat {
       container.addChild(sprite);
       container.pivot.set(container.width / 2, container.height / 2);
       this.updateWakeParticleEmitterPositions();
-      this._events.fire("boat-update", this);
+      this._game.events.fire("boat-update", this);
     });
 
-    app.ticker.add((dt) => {
+    game.app.ticker.add((dt) => {
       this.updateWakeParticleEmitterPositions();
       this._wakeEmitters.forEach((e) => e.update(dt * 0.01));
       if (!closeTo(container.rotation, this._desiredRotation)) {
@@ -144,7 +145,7 @@ export class Boat {
   }
 
   private setFishingStatus(status: FishingStatus): void {
-    this._events.fire("boat-update", this);
+    this._game.events.fire("boat-update", this);
     this.fishers.forEach((fisher) => {
       fisher.setLineStatus(status, makeCastDelay(status));
     });
@@ -164,7 +165,8 @@ export class Boat {
         x: wx * this.container.width,
         y: wy * this.container.height,
       };
-      this.container.toGlobal(p, point);
+      // This works as wake emitters live on the global stage
+      this._game.viewport.toLocal(p, this.container, point);
       e.updateSpawnPos(point.x, point.y);
       e.rotate(this.container.rotation);
     });

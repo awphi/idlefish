@@ -1,3 +1,5 @@
+precision highp float;
+
 const float uFreqY = 20.;
 const float uFreqX = 10.;
 const float uSpeed = 3.;

@@ -5,7 +5,10 @@ import pixellateShaderSrc from "./shaders/pixellate.glsl?raw";
 import { makeBackgroundWaterSprite } from "./layers/background-water-sprite";
 import { Boat } from "./boat";
 import { makeBoatIndicatorLayer } from "./layers/boat-indicator-layer";
-import { makeFishingLineLayer } from "./layers/fishing-line-layer";
+import {
+  makeFishingLineLayer,
+  type FishingLineLayer,
+} from "./layers/fishing-line-layer";
 import type { BoatDef } from "./boat-def";
 import { Interactions } from "./interactions";
 import { Events } from "./events";
@@ -13,9 +16,12 @@ import {
   makeBoatTextLayer,
   type BoatTextLayer,
 } from "./layers/boat-text-layer";
+import { Viewport } from "pixi-viewport";
+import { worldHeight, worldWidth } from "./utils";
 
 export class Game {
   private _app: PIXI.Application;
+  private _viewport: Viewport;
 
   private _interactions: Interactions;
   private _events = new Events();
@@ -23,7 +29,7 @@ export class Game {
   // Layers are in ascending order
   private _waterLayers: PIXI.Container;
   private _boatIndicationLayer = makeBoatIndicatorLayer();
-  private _fishingLineLayer = makeFishingLineLayer();
+  private _fishingLineLayer: FishingLineLayer;
   private _boatLayer = new PIXI.Container();
   private _boatTextLayer: BoatTextLayer;
 
@@ -32,6 +38,7 @@ export class Game {
   // Shaders and uniforms
   private _globalUniforms = {
     time: 0,
+    maxPixelSize: 4,
   };
 
   private _waterWarpShader = new PIXI.Filter(
@@ -40,12 +47,22 @@ export class Game {
     this._globalUniforms
   );
 
-  private _4xPixellateShader = new PIXI.Filter(null, pixellateShaderSrc, {
-    maxPixelSize: 4,
-  });
+  private _dynamicPixellateShader = new PIXI.Filter(
+    null,
+    pixellateShaderSrc,
+    this._globalUniforms
+  );
 
   public get interactions(): Interactions {
     return this._interactions;
+  }
+
+  public get viewport(): Viewport {
+    return this._viewport;
+  }
+
+  public get app(): PIXI.Application {
+    return this._app;
   }
 
   public get events(): Events {
@@ -54,31 +71,54 @@ export class Game {
 
   constructor(parentEl: HTMLElement) {
     this._app = new PIXI.Application();
+    const viewport = new Viewport({
+      events: this._app.renderer.events,
+      screenWidth: parentEl.offsetWidth,
+      screenHeight: parentEl.offsetHeight,
+      worldWidth,
+      worldHeight,
+    });
+    this._viewport = viewport;
+    viewport
+      .clampZoom({
+        minScale: 0.5,
+        maxScale: 1.25,
+      })
+      .drag({
+        mouseButtons: "right middle",
+      })
+      .pinch()
+      .wheel()
+      .decelerate();
+    viewport.moveCenter(viewport.worldWidth / 2, viewport.worldHeight / 2);
+    this._app.stage.addChild(viewport);
+    this._app.resizeTo = parentEl;
 
     // Ticker to update global uniforms
     this._app.ticker.add((delta) => {
+      this._globalUniforms.maxPixelSize = 4 * viewport.scale.x;
       this._globalUniforms.time += delta * 0.01;
     });
 
     this._waterLayers = new PIXI.Container();
     this._waterLayers.filters = [
       this._waterWarpShader,
-      this._4xPixellateShader,
+      this._dynamicPixellateShader,
     ];
 
-    this._app.resizeTo = parentEl;
     this._waterLayers.addChild(
       makeBackgroundWaterSprite(this._app, this._globalUniforms)
     );
     this._waterLayers.addChild(this._boatIndicationLayer.graphics);
+    this._fishingLineLayer = makeFishingLineLayer(viewport);
     this._fishingLineLayer.graphics.filters = [this._waterWarpShader];
 
     this._boatTextLayer = makeBoatTextLayer(this._app);
 
-    this._app.stage.addChild(this._waterLayers);
-    this._app.stage.addChild(this._fishingLineLayer.graphics);
-    this._app.stage.addChild(this._boatLayer);
-    this._app.stage.addChild(this._boatTextLayer.container);
+    viewport.addChild(this._waterLayers);
+    viewport.addChild(this._fishingLineLayer.graphics);
+    viewport.addChild(this._boatLayer);
+    viewport.addChild(this._boatTextLayer.container);
 
     parentEl.appendChild(this._app.view as any);
     this._interactions = new Interactions(this._app, this._events, this._boats);
@@ -104,10 +144,10 @@ export class Game {
   }
 
   addBoat(boatDef: BoatDef): void {
-    const boat = new Boat(this._app, this._events, boatDef);
+    const boat = new Boat(this, boatDef);
     this._boats.set(boat.container, boat);
     this._boatLayer.addChild(boat.container);
-    boat.setPosition(this._app.stage.width / 2, this._app.stage.height / 2);
+    boat.setPosition(worldWidth / 2, worldHeight / 2);
   }
 
   destroy() {
