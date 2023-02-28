@@ -1,6 +1,6 @@
 import type { IPointData } from "pixi.js";
 import * as PIXI from "pixi.js";
-import type { Boat } from "./boat";
+import type { Boat } from "../boat";
 
 export function makeBoatIndicatorLayer(): {
   graphics: PIXI.Graphics;

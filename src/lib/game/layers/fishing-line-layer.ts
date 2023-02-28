@@ -1,8 +1,7 @@
 import * as PIXI from "pixi.js";
-import "@pixi/math-extras";
-import type { Boat } from "./boat";
+import type { Boat } from "../boat";
 import type { IPointData } from "pixi.js";
-import type { FishingLineState } from "./fisher";
+import type { FishingLineState } from "../fisher";
 
 export interface FishingLineLayer {
   graphics: PIXI.Graphics;

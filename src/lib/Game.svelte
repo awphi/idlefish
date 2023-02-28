@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
+  import BalancePanel from "./BalancePanel.svelte";
   import BoatInfoPanel from "./BoatInfoPanel.svelte";
   import type { Boat } from "./game/boat";
   import { BOAT_DEFS } from "./game/boat-def";
@@ -36,6 +37,11 @@
   id="game-view"
   class="w-full h-full"
 />
-{#if boat !== null}
-  <BoatInfoPanel {boat} />
-{/if}
+<div class="fixed left-1 top-1">
+  <BalancePanel />
+</div>
+<div class="fixed right-1 top-1">
+  {#if boat !== null}
+    <BoatInfoPanel {boat} />
+  {/if}
+</div>

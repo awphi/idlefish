@@ -1,13 +1,18 @@
 import * as PIXI from "pixi.js";
+import "@pixi/math-extras";
 import waterWarpShaderSrc from "./shaders/water-warp-frag.glsl?raw";
 import pixellateShaderSrc from "./shaders/pixellate.glsl?raw";
-import { makeWaterLayer } from "./water-layer";
+import { makeBackgroundWaterSprite } from "./layers/background-water-sprite";
 import { Boat } from "./boat";
-import { makeBoatIndicatorLayer } from "./boat-indicator-layer";
-import { makeFishingLineLayer } from "./fishing-line-layer";
+import { makeBoatIndicatorLayer } from "./layers/boat-indicator-layer";
+import { makeFishingLineLayer } from "./layers/fishing-line-layer";
 import type { BoatDef } from "./boat-def";
 import { Interactions } from "./interactions";
 import { Events } from "./events";
+import {
+  makeBoatTextLayer,
+  type BoatTextLayer,
+} from "./layers/boat-text-layer";
 
 export class Game {
   private _app: PIXI.Application;
@@ -15,10 +20,12 @@ export class Game {
   private _interactions: Interactions;
   private _events = new Events();
 
-  private _waterContainer: PIXI.Container;
+  // Layers are in ascending order
+  private _waterLayers: PIXI.Container;
   private _boatIndicationLayer = makeBoatIndicatorLayer();
   private _fishingLineLayer = makeFishingLineLayer();
-  private _backgroundWater: PIXI.Container;
+  private _boatLayer = new PIXI.Container();
+  private _boatTextLayer: BoatTextLayer;
 
   private _boats: Map<PIXI.Container, Boat> = new Map();
 
@@ -53,20 +60,25 @@ export class Game {
       this._globalUniforms.time += delta * 0.01;
     });
 
-    this._waterContainer = new PIXI.Container();
-    this._waterContainer.filters = [
+    this._waterLayers = new PIXI.Container();
+    this._waterLayers.filters = [
       this._waterWarpShader,
       this._4xPixellateShader,
     ];
-    this._app.stage.addChild(this._waterContainer);
 
     this._app.resizeTo = parentEl;
-    this._backgroundWater = makeWaterLayer(this._app, this._globalUniforms);
-    this._waterContainer.addChild(this._backgroundWater);
-    this._waterContainer.addChild(this._boatIndicationLayer.graphics);
+    this._waterLayers.addChild(
+      makeBackgroundWaterSprite(this._app, this._globalUniforms)
+    );
+    this._waterLayers.addChild(this._boatIndicationLayer.graphics);
     this._fishingLineLayer.graphics.filters = [this._waterWarpShader];
 
+    this._boatTextLayer = makeBoatTextLayer(this._app);
+
+    this._app.stage.addChild(this._waterLayers);
     this._app.stage.addChild(this._fishingLineLayer.graphics);
+    this._app.stage.addChild(this._boatLayer);
+    this._app.stage.addChild(this._boatTextLayer.container);
 
     parentEl.appendChild(this._app.view as any);
     this._interactions = new Interactions(this._app, this._events, this._boats);
@@ -81,12 +93,20 @@ export class Game {
       );
       this._fishingLineLayer.refresh(this._boats.values());
     });
+
+    this._events.on("boat-catch", (boat, fish) => {
+      this._boatTextLayer.drawText(
+        boat,
+        "+ " + fish.name,
+        PIXI.utils.string2hex(fish.color)
+      );
+    });
   }
 
   addBoat(boatDef: BoatDef): void {
     const boat = new Boat(this._app, this._events, boatDef);
     this._boats.set(boat.container, boat);
-    this._app.stage.addChild(boat.container);
+    this._boatLayer.addChild(boat.container);
     boat.setPosition(this._app.stage.width / 2, this._app.stage.height / 2);
   }
 

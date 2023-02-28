@@ -6,7 +6,7 @@
 </script>
 
 <div
-  class=" fixed right-1 top-1 select-none bg-neutral-700 p-2 rounded-md shadow-sm flex flex-col w-64"
+  class="select-none bg-neutral-700 p-2 rounded-md shadow-sm flex flex-col w-64"
 >
   <h1 class="text-2xl">{boat.boatDef.name}</h1>
   <hr class="mb-2" />
@@ -51,7 +51,6 @@
       <span class="flex text-sm" style:color={fish.color}>{fish.name}</span>
     {/each}
   </div>
-  <p>TODO crew slots</p>
 </div>
 
 <style>
@@ -60,7 +59,7 @@
   }
 
   .stat-box > span {
-    @apply ml-auto;
+    @apply ml-auto mt-[2px];
   }
 
   .boat-stat-display {

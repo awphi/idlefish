@@ -11,7 +11,7 @@ import type { Events } from "./events";
 type BoatStatus = "rotating" | "moving" | "idle";
 
 function makeCastDelay(status: FishingStatus): number {
-  return status === "out" ? Math.random() * 2000 : Math.random() * 100;
+  return status === "out" ? Math.random() * 2000 : Math.random() * 200;
 }
 
 export class Boat {
@@ -70,6 +70,7 @@ export class Boat {
     if (!this.isInventoryFull()) {
       this._inventory.push(fish);
       this._events.fire("boat-update", this);
+      this._events.fire("boat-catch", this, fish);
       return true;
     }
 
@@ -114,6 +115,7 @@ export class Boat {
       container.addChild(sprite);
       container.pivot.set(container.width / 2, container.height / 2);
       this.updateWakeParticleEmitterPositions();
+      this._events.fire("boat-update", this);
     });
 
     app.ticker.add((dt) => {

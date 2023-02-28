@@ -1,6 +1,5 @@
 import { getNormallyDistributedRandomNumber, weightedRandom } from "./utils";
 
-// TODO colors
 const TIERS = [
   {
     weight: 14,
