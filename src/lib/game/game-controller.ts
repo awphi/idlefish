@@ -39,6 +39,7 @@ export class Game {
   private _globalUniforms = {
     time: 0,
     maxPixelSize: 4,
+    glintSize: 70,
   };
 
   private _waterWarpShader = new PIXI.Filter(
@@ -79,10 +80,11 @@ export class Game {
       worldHeight,
     });
     this._viewport = viewport;
+    // These numbers play nice with the water frag shader
     viewport
       .clampZoom({
-        minScale: 0.5,
-        maxScale: 1.25,
+        minScale: 0.543367431263029,
+        maxScale: 1,
       })
       .drag({
         mouseButtons: "right middle",
@@ -97,6 +99,8 @@ export class Game {
     // Ticker to update global uniforms
     this._app.ticker.add((delta) => {
       this._globalUniforms.maxPixelSize = 4 * viewport.scale.x;
+      console.log(viewport.scale.x);
+      this._globalUniforms.glintSize = 70 / viewport.scale.x;
       this._globalUniforms.time += delta * 0.01;
     });
 
@@ -106,9 +110,7 @@ export class Game {
       this._dynamicPixellateShader,
     ];
 
-    this._waterLayers.addChild(
-      makeBackgroundWaterSprite(this._app, this._globalUniforms)
-    );
+    this._waterLayers.addChild(makeBackgroundWaterSprite(this._globalUniforms));
     this._waterLayers.addChild(this._boatIndicationLayer.graphics);
     this._fishingLineLayer = makeFishingLineLayer(viewport);
     this._fishingLineLayer.graphics.filters = [this._waterWarpShader];

@@ -3,25 +3,12 @@ precision highp float;
 uniform float time;
 varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
-uniform vec4 inputPixel;
-uniform vec4 filterArea;
+uniform float glintSize;
 
-vec2 mapCoord(vec2 coord) {
-  coord *= filterArea.xy;
-  coord += filterArea.zw;
-
-  return coord;
-}
-
-// TODO this shader/the way we do water needs rewriting
-// currently the glints of the ocean are calculated based off texture coord relative to bounding box
-// not relative to the entire ocean so they appear to move with the camera - not right.
-
-// It can be "fixed" by disabling the shader's autoFit prop and using uv = mapCoord(vTextureCoord) but that is SUPER expensive on the GPU
 void main() {
-  vec4 texture_color = texture2D(uSampler, vTextureCoord); // rgb 93, 173, 226
+  vec4 texture_color = texture2D(uSampler, vTextureCoord);
   vec4 k = vec4(time);
-  k.xy = vTextureCoord * 14.0;
+  k.xy = vTextureCoord * glintSize;
   float val1 = length(0.5 - fract(k.xyw *= mat3(vec3(-2.0, -1.0, 0.0), vec3(3.0, -1.0, 1.0), vec3(1.0, -1.0, -1.0)) * 0.5));
   float val2 = length(0.5 - fract(k.xyw *= mat3(vec3(-2.0, -1.0, 0.0), vec3(3.0, -1.0, 1.0), vec3(1.0, -1.0, -1.0)) * 0.2));
   float val3 = length(0.5 - fract(k.xyw *= mat3(vec3(-2.0, -1.0, 0.0), vec3(3.0, -1.0, 1.0), vec3(1.0, -1.0, -1.0)) * 0.5));

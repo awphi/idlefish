@@ -3,11 +3,11 @@ import waterShaderSrc from "../shaders/water-frag.glsl?raw";
 import { worldHeight, worldWidth } from "../utils";
 
 export function makeBackgroundWaterSprite(
-  app: PIXI.Application,
   uniforms: PIXI.utils.Dict<any>
 ): PIXI.Sprite {
   const waterShader = new PIXI.Filter(null, waterShaderSrc, uniforms);
-  //waterShader.autoFit = false;
+  waterShader.autoFit = false;
+  waterShader.resolution = 0.1;
   const bgSprite = new PIXI.Sprite(PIXI.Texture.WHITE);
   bgSprite.filters = [waterShader];
 
