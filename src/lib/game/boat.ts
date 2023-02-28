@@ -92,8 +92,6 @@ export class Boat {
 
     const container = new PIXI.Container();
     this._container = container;
-    container.x = 100;
-    container.y = 100;
     container.interactive = true;
 
     this._desiredPosition = new PIXI.Point(container.x, container.y);
@@ -175,6 +173,14 @@ export class Boat {
       Math.atan2(y - this._container.y, x - this._container.x) - Math.PI / 2;
 
     this._desiredPosition.set(x, y);
+    this._heading.copyFrom(
+      this._desiredPosition.subtract(this._container.position).normalize()
+    );
+  }
+
+  public setPosition(x: number, y: number): void {
+    this._desiredPosition.set(x, y);
+    this._container.position.set(x, y);
     this._heading.copyFrom(
       this._desiredPosition.subtract(this._container.position).normalize()
     );

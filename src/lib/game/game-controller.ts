@@ -83,10 +83,11 @@ export class Game {
     });
   }
 
-  async addBoat(boatDef: BoatDef): Promise<void> {
+  addBoat(boatDef: BoatDef): void {
     const boat = new Boat(this._app, this._events, boatDef);
     this._boats.set(boat.container, boat);
     this._app.stage.addChild(boat.container);
+    boat.setPosition(this._app.stage.width / 2, this._app.stage.height / 2);
   }
 
   destroy() {
