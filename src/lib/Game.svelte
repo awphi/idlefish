@@ -2,26 +2,48 @@
   import { onDestroy, onMount } from "svelte";
   import BalancePanel from "./BalancePanel.svelte";
   import BoatInfoPanel from "./BoatInfoPanel.svelte";
+  import FleetPanel from "./FleetPanel.svelte";
   import type { Boat } from "./game/boat";
   import { BOAT_DEFS } from "./game/boat-def";
   import { Game } from "./game/game-controller";
 
   let game: Game;
-  let boat: Boat | null = null;
+  let boats: Boat[] = [];
+  let selectedBoat: Boat | null = null;
+
+  $: if (selectedBoat !== null) {
+    game.viewport.animate({
+      position: {
+        x: selectedBoat.container.x,
+        y: selectedBoat.container.y,
+      },
+      time: 100,
+    });
+  }
 
   onMount(() => {
     game = new Game(document.querySelector("#game-view") as HTMLElement);
-    game.addBoat(BOAT_DEFS.pirateShip);
     game.events.on("select", (type, item) => {
-      boat = type === "boat" ? item : null;
+      selectedBoat = type === "boat" ? boats[boats.indexOf(item)] : null;
+    });
+
+    game.events.on("boat-add", (boat) => {
+      boats = [...boats, boat];
+    });
+
+    game.events.on("boat-remove", (boat) => {
+      boats = boats.filter((a) => a !== boat);
     });
 
     game.events.on("boat-update", (updatedBoat) => {
-      // Tells svelte to update components - reactivity only extends to stuff inside components!
-      if (boat === updatedBoat) {
-        boat = boat;
+      const idx = boats.indexOf(updatedBoat);
+      if (idx !== -1) {
+        boats[idx] = updatedBoat;
       }
     });
+
+    game.addBoat(BOAT_DEFS.pirateShip, { x: 5200, y: 5000 });
+    game.addBoat(BOAT_DEFS.pirateShip, { x: 4800, y: 5000 });
   });
 
   onDestroy(() => {
@@ -41,7 +63,11 @@
   <BalancePanel />
 </div>
 <div class="fixed right-1 top-1">
-  {#if boat !== null}
-    <BoatInfoPanel {boat} />
+  {#if selectedBoat !== null}
+    <BoatInfoPanel boat={selectedBoat} />
   {/if}
+</div>
+
+<div class="fixed left-1 bottom-1">
+  <FleetPanel {boats} bind:selectedBoat />
 </div>

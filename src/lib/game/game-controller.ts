@@ -16,8 +16,10 @@ import {
   makeBoatTextLayer,
   type BoatTextLayer,
 } from "./layers/boat-text-layer";
-import { Viewport } from "pixi-viewport";
 import { worldHeight, worldWidth } from "./utils";
+import { makeViewport } from "./viewport";
+import type { Viewport } from "pixi-viewport";
+import type { IPointData } from "pixi.js";
 
 export class Game {
   private _app: PIXI.Application;
@@ -72,35 +74,14 @@ export class Game {
 
   constructor(parentEl: HTMLElement) {
     this._app = new PIXI.Application();
-    const viewport = new Viewport({
-      events: this._app.renderer.events,
-      screenWidth: parentEl.offsetWidth,
-      screenHeight: parentEl.offsetHeight,
-      worldWidth,
-      worldHeight,
-    });
-    this._viewport = viewport;
-    // These numbers play nice with the water frag shader
-    viewport
-      .clampZoom({
-        minScale: 0.543367431263029,
-        maxScale: 1,
-      })
-      .drag({
-        mouseButtons: "right middle",
-      })
-      .pinch()
-      .wheel()
-      .decelerate();
-    viewport.moveCenter(viewport.worldWidth / 2, viewport.worldHeight / 2);
-    this._app.stage.addChild(viewport);
+    this._viewport = makeViewport(this._app, parentEl);
+    this._app.stage.addChild(this._viewport);
     this._app.resizeTo = parentEl;
 
     // Ticker to update global uniforms
     this._app.ticker.add((delta) => {
-      this._globalUniforms.maxPixelSize = 4 * viewport.scale.x;
-      console.log(viewport.scale.x);
-      this._globalUniforms.glintSize = 70 / viewport.scale.x;
+      this._globalUniforms.maxPixelSize = 4 * this._viewport.scale.x;
+      this._globalUniforms.glintSize = 70 / this._viewport.scale.x;
       this._globalUniforms.time += delta * 0.01;
     });
 
@@ -112,15 +93,15 @@ export class Game {
 
     this._waterLayers.addChild(makeBackgroundWaterSprite(this._globalUniforms));
     this._waterLayers.addChild(this._boatIndicationLayer.graphics);
-    this._fishingLineLayer = makeFishingLineLayer(viewport);
+    this._fishingLineLayer = makeFishingLineLayer(this._viewport);
     this._fishingLineLayer.graphics.filters = [this._waterWarpShader];
 
     this._boatTextLayer = makeBoatTextLayer(this._app);
 
-    viewport.addChild(this._waterLayers);
-    viewport.addChild(this._fishingLineLayer.graphics);
-    viewport.addChild(this._boatLayer);
-    viewport.addChild(this._boatTextLayer.container);
+    this._viewport.addChild(this._waterLayers);
+    this._viewport.addChild(this._fishingLineLayer.graphics);
+    this._viewport.addChild(this._boatLayer);
+    this._viewport.addChild(this._boatTextLayer.container);
 
     parentEl.appendChild(this._app.view as any);
     this._interactions = new Interactions(this._app, this._events, this._boats);
@@ -145,11 +126,23 @@ export class Game {
     });
   }
 
-  addBoat(boatDef: BoatDef): void {
+  addBoat(
+    boatDef: BoatDef,
+    pos: IPointData = { x: worldWidth / 2, y: worldHeight / 2 }
+  ): void {
     const boat = new Boat(this, boatDef);
     this._boats.set(boat.container, boat);
     this._boatLayer.addChild(boat.container);
-    boat.setPosition(worldWidth / 2, worldHeight / 2);
+    boat.setPosition(pos.x, pos.y);
+    this._events.fire("boat-add", boat);
+  }
+
+  removeBoat(boat: Boat): void {
+    // Fire the event before destruction to allow referencing its position etc.
+    this._events.fire("boat-remove", boat);
+    this._boats.delete(boat.container);
+    this._boatLayer.removeChild(boat.container);
+    boat.container.destroy();
   }
 
   destroy() {
