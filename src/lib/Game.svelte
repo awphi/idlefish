@@ -10,8 +10,9 @@
   let game: Game;
   let boats: Boat[] = [];
   let selectedBoat: Boat | null = null;
+  let isFollowingSelected = false;
 
-  $: if (selectedBoat !== null) {
+  $: if (selectedBoat !== null && isFollowingSelected) {
     game.viewport.animate({
       position: {
         x: selectedBoat.container.x,
@@ -25,6 +26,7 @@
     game = new Game(document.querySelector("#game-view") as HTMLElement);
     game.events.on("select", (type, item) => {
       selectedBoat = type === "boat" ? boats[boats.indexOf(item)] : null;
+      isFollowingSelected = type === "boat";
     });
 
     game.events.on("boat-add", (boat) => {
@@ -33,6 +35,10 @@
 
     game.events.on("boat-remove", (boat) => {
       boats = boats.filter((a) => a !== boat);
+    });
+
+    game.viewport.on("drag-start", () => {
+      isFollowingSelected = false;
     });
 
     game.events.on("boat-update", (updatedBoat) => {

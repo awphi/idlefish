@@ -20,6 +20,8 @@ import { worldHeight, worldWidth } from "./utils";
 import { makeViewport } from "./viewport";
 import type { Viewport } from "pixi-viewport";
 import type { IPointData } from "pixi.js";
+import { makeZoneLayer } from "./layers/zones-layer";
+import type { Zone } from "./zones";
 
 export class Game {
   private _app: PIXI.Application;
@@ -29,13 +31,16 @@ export class Game {
   private _events = new Events();
 
   // Layers are in ascending order
-  private _waterLayers: PIXI.Container;
+  private _waterLayers = new PIXI.Container();
+  private _zoneLayer = makeZoneLayer();
   private _boatIndicationLayer = makeBoatIndicatorLayer();
   private _fishingLineLayer: FishingLineLayer;
   private _boatLayer = new PIXI.Container();
   private _boatTextLayer: BoatTextLayer;
 
+  // State
   private _boats: Map<PIXI.Container, Boat> = new Map();
+  private _zones = new Set<Zone>();
 
   // Shaders and uniforms
   private _globalUniforms = {
@@ -85,20 +90,21 @@ export class Game {
       this._globalUniforms.time += delta * 0.01;
     });
 
-    this._waterLayers = new PIXI.Container();
     this._waterLayers.filters = [
       this._waterWarpShader,
       this._dynamicPixellateShader,
     ];
 
+    this._zoneLayer.container.filters = [this._dynamicPixellateShader];
+
     this._waterLayers.addChild(makeBackgroundWaterSprite(this._globalUniforms));
     this._waterLayers.addChild(this._boatIndicationLayer.graphics);
     this._fishingLineLayer = makeFishingLineLayer(this._viewport);
-    this._fishingLineLayer.graphics.filters = [this._waterWarpShader];
 
     this._boatTextLayer = makeBoatTextLayer(this._app);
 
     this._viewport.addChild(this._waterLayers);
+    this._viewport.addChild(this._zoneLayer.container);
     this._viewport.addChild(this._fishingLineLayer.graphics);
     this._viewport.addChild(this._boatLayer);
     this._viewport.addChild(this._boatTextLayer.container);
@@ -124,6 +130,17 @@ export class Game {
         PIXI.utils.string2hex(fish.color)
       );
     });
+
+    this.addZone({
+      position: {
+        x: worldWidth / 2,
+        y: worldHeight / 2,
+      },
+      radius: 500,
+      color: 0x229954,
+      role: "shop",
+      text: "Shop",
+    });
   }
 
   addBoat(
@@ -135,6 +152,16 @@ export class Game {
     this._boatLayer.addChild(boat.container);
     boat.setPosition(pos.x, pos.y);
     this._events.fire("boat-add", boat);
+  }
+
+  addZone(zone: Zone) {
+    this._zones.add(zone);
+    this._zoneLayer.refresh(this._zones.values());
+  }
+
+  removeZone(zone: Zone) {
+    this._zones.delete(zone);
+    this._zoneLayer.refresh(this._zones.values());
   }
 
   removeBoat(boat: Boat): void {

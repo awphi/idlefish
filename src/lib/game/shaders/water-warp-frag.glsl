@@ -3,7 +3,7 @@ precision highp float;
 const float uFreqY = 20.;
 const float uFreqX = 10.;
 const float uSpeed = 3.;
-const float uAmplitude = 0.003;
+const float uAmplitude = 0.006;
 
 uniform float time;
 varying vec2 vTextureCoord;

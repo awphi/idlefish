@@ -134,6 +134,7 @@ export class Boat {
           !closeTo(container.y, this._desiredPosition.y, 1)
         ) {
           this.status = "moving";
+          this._game.events.fire("boat-update", this);
           container.x += boatDef.speed * this._heading.x * dt;
           container.y += boatDef.speed * this._heading.y * dt;
         } else {
