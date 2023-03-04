@@ -1,12 +1,24 @@
 <script lang="ts">
   import type { Boat } from "./game/boat";
   import Icon from "@iconify/svelte";
+  import { scale } from "svelte/transition";
+  import { quintInOut } from "svelte/easing";
+  import { tick } from "svelte";
 
   export let boat: Boat;
+
+  let inventoryElement: HTMLDivElement;
+
+  $: if (boat.inventory) {
+    tick().then(() => {
+      inventoryElement.scroll({ top: inventoryElement.scrollHeight });
+    });
+  }
 </script>
 
 <div
-  class="select-none bg-neutral-700 p-2 rounded-md shadow-sm flex flex-col w-64"
+  transition:scale
+  class="select-none bg-neutral-700 p-2 rounded-md shadow-sm flex flex-col w-72"
 >
   <h1 class="text-2xl">{boat.boatDef.name}</h1>
   <hr class="mb-2" />
@@ -45,10 +57,17 @@
     Inventory ({boat.inventory.length}/{boat.boatDef.fishCapacity})
   </h1>
   <div
+    bind:this={inventoryElement}
     class="h-32 rounded-md bg-black bg-opacity-20 overflow-y-scroll gap-1 flex flex-col px-2 py-1"
   >
     {#each boat.inventory as fish}
-      <span class="flex text-sm" style:color={fish.color}>{fish.name}</span>
+      <div class="flex" transition:scale={{ easing: quintInOut }}>
+        <span class="flex text-sm" style:color={fish.color}>{fish.name}</span>
+        <button
+          class="ml-auto bg-neutral-800 bg-opacity-50 px-2 rounded-md hover:contrast-125 cont disabled:contrast-75"
+          >Sell</button
+        >
+      </div>
     {/each}
   </div>
 </div>

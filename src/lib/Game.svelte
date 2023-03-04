@@ -40,6 +40,10 @@
       if (idx !== -1) {
         boats[idx] = updatedBoat;
       }
+
+      if (updatedBoat === selectedBoat) {
+        selectedBoat = updatedBoat;
+      }
     });
 
     game.addBoat(BOAT_DEFS.pirateShip, { x: 5200, y: 5000 });
