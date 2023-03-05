@@ -7,6 +7,7 @@
   import type { Game } from "./game/game-controller";
   import type { Fish } from "./game/fish";
   import { savedBalance } from "./save-state";
+  import { flip } from "svelte/animate";
 
   export let boat: Boat;
   export let game: Game;
@@ -75,8 +76,11 @@
     bind:this={inventoryElement}
     class="h-32 rounded-md bg-black bg-opacity-20 overflow-y-scroll gap-1 flex flex-col px-2 py-1"
   >
-    {#each boat.inventory as fish}
-      <div class="flex" transition:scale={{ easing: quintInOut }}>
+    {#each boat.inventory as fish (fish.name)}
+      <div
+        class="flex"
+        transition:scale={{ easing: quintInOut, duration: 200 }}
+      >
         <span class="flex text-sm" style:color={fish.color}>{fish.name}</span>
         {#if isInShop}
           <button

@@ -2,6 +2,7 @@ import type * as PIXI from "pixi.js";
 import { Howl, Howler } from "howler";
 import { makeFishFactory } from "./fish";
 import type { Boat } from "./boat";
+import { makeFisherName } from "./fisher-name";
 
 export type FishingStatus = "out" | "in";
 
@@ -11,6 +12,10 @@ export interface FishingLineState {
 }
 
 export class Fisher {
+  // Absolute state
+  public readonly name = makeFisherName();
+
+  // Transient state
   private _app: PIXI.Application;
   private _nextLineStatus: FishingStatus | null = null;
   private _nextLineTime: number | null = null;

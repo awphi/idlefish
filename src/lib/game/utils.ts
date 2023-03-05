@@ -20,17 +20,21 @@ export function getNormallyDistributedRandomNumber(
 export function weightedRandom(weights: {
   [k: string]: { weight: number };
 }): string {
-  const uniformRandom = Math.random();
+  let uniformRandom = Math.random();
   let sum = 0;
 
   for (const [k, v] of Object.entries<{ weight: number }>(weights)) {
-    sum += v.weight;
     if (uniformRandom < sum) {
       return k;
     }
+    uniformRandom -= v.weight;
   }
 
   return Object.keys(weights)[0];
+}
+
+export function randomElement<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
 }
 
 export function closeTo(x: number, y: number, epsilon = 1e-2): boolean {
