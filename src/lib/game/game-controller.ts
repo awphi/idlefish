@@ -90,7 +90,7 @@ export class Game {
     });
 
     this._waterLayer.filters = [
-      this._waterWarpShader,
+      //this._waterWarpShader,
       this._dynamicPixellateShader,
     ];
 
