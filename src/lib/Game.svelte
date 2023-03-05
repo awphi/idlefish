@@ -79,5 +79,5 @@
 </div>
 
 <div class="fixed left-1 bottom-1">
-  <FleetPanel {boats} bind:selectedBoat />
+  <FleetPanel {boats} bind:selectedBoat bind:isFollowingSelected />
 </div>

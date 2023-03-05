@@ -58,7 +58,7 @@ export class Fisher {
 
     // Measured in fish/second
     // TODO make this (and other stats) affected by fisher quality, gear etc.
-    const fishingRate = 0.2;
+    const fishingRate = 0.02;
     // how many ms between reeling in and recasting
     const recastTime = 1000;
 

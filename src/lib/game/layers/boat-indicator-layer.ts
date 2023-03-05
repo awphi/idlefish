@@ -1,6 +1,7 @@
 import type { IPointData } from "pixi.js";
 import * as PIXI from "pixi.js";
 import type { Boat } from "../boat";
+import { worldHeight, worldWidth } from "../utils";
 
 export function makeBoatIndicatorLayer(): {
   graphics: PIXI.Graphics;
@@ -22,6 +23,8 @@ export function makeBoatIndicatorLayer(): {
     g.moveTo(boat.container.x, boat.container.y);
     g.lineTo(dst.x, dst.y);
   }
+
+  g.filterArea = new PIXI.Rectangle(0, 0, worldWidth, worldHeight);
 
   return {
     graphics: g,

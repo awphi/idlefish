@@ -3,6 +3,7 @@
 
   export let boats: Boat[];
   export let selectedBoat: Boat;
+  export let isFollowingSelected: boolean;
 </script>
 
 <div class="flex flex-col select-none gap-2 pr-2 rounded-md">
@@ -11,7 +12,10 @@
       class="bg-neutral-700 rounded-md flex p-1"
       class:contrast-150={selectedBoat === boat}
       class:hover:contrast-125={selectedBoat !== boat}
-      on:click={() => (selectedBoat = boat)}
+      on:click={() => {
+        selectedBoat = boat;
+        isFollowingSelected = true;
+      }}
     >
       <div class="w-12 h-12 p-1  flex justify-center items-center">
         <img

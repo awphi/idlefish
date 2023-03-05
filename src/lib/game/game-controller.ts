@@ -31,7 +31,7 @@ export class Game {
   private _events = new Events();
 
   // Layers are in ascending order
-  private _waterLayers = new PIXI.Container();
+  private _waterLayer = new PIXI.Container();
   private _zoneLayer = makeZoneLayer();
   private _boatIndicationLayer = makeBoatIndicatorLayer();
   private _fishingLineLayer: FishingLineLayer;
@@ -90,21 +90,22 @@ export class Game {
       this._globalUniforms.time += delta * 0.01;
     });
 
-    this._waterLayers.filters = [
+    this._waterLayer.filters = [
       this._waterWarpShader,
       this._dynamicPixellateShader,
     ];
 
+    this._boatIndicationLayer.graphics.filters = [this._dynamicPixellateShader];
+
     this._zoneLayer.container.filters = [this._dynamicPixellateShader];
 
-    this._waterLayers.addChild(makeBackgroundWaterSprite(this._globalUniforms));
-    this._waterLayers.addChild(this._boatIndicationLayer.graphics);
+    this._waterLayer.addChild(makeBackgroundWaterSprite(this._globalUniforms));
     this._fishingLineLayer = makeFishingLineLayer(this._viewport);
-
     this._boatTextLayer = makeBoatTextLayer(this._app);
 
-    this._viewport.addChild(this._waterLayers);
+    this._viewport.addChild(this._waterLayer);
     this._viewport.addChild(this._zoneLayer.container);
+    this._viewport.addChild(this._boatIndicationLayer.graphics);
     this._viewport.addChild(this._fishingLineLayer.graphics);
     this._viewport.addChild(this._boatLayer);
     this._viewport.addChild(this._boatTextLayer.container);
