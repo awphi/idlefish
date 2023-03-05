@@ -6,10 +6,16 @@ import wakeParticlesEmitterDef from "./particles/wake.json";
 import type { BoatDef } from "./boat-def";
 import { Fisher, type FishingStatus } from "./fisher";
 import type { Fish } from "./fish";
-import type { Events } from "./events";
 import type { Game } from "./game-controller";
 
 type BoatStatus = "rotating" | "moving" | "idle";
+
+export interface SerializedBoat {
+  boatDef: BoatDef;
+  inventory: Fish[];
+  position: PIXI.IPointData;
+  rotation: number;
+}
 
 function makeCastDelay(status: FishingStatus): number {
   return status === "out" ? Math.random() * 2000 : Math.random() * 200;
@@ -67,21 +73,38 @@ export class Boat {
     return this._inventory.length >= this.boatDef.fishCapacity;
   }
 
-  public addFish(fish: Fish, updateFishers = true): boolean {
+  public addFish(fish: Fish): boolean {
+    let added = false;
     if (!this.isInventoryFull()) {
       this._inventory.push(fish);
       this._game.events.fire("boat-update", this);
       this._game.events.fire("boat-catch", this, fish);
-      return true;
+      added = true;
     }
 
-    if (updateFishers) {
+    if (this.isInventoryFull()) {
       // Bring all lines if the ship is full
       this._fishers.forEach((f) => {
         f.setLineStatus("in", makeCastDelay("in"));
       });
     }
-    return false;
+
+    return added;
+  }
+
+  public removeFish(fish: Fish, recast = true): boolean {
+    const lengthBefore = this._inventory.length;
+    this._inventory = this._inventory.filter((a) => a !== fish);
+    this._game.events.fire("boat-update", this);
+
+    if (recast) {
+      // Re-cast lines
+      this._fishers.forEach((f) => {
+        f.setLineStatus("out", makeCastDelay("out"));
+      });
+    }
+
+    return lengthBefore !== this._inventory.length;
   }
 
   public constructor(game: Game, boatDef: BoatDef) {
@@ -193,5 +216,17 @@ export class Boat {
 
   public destroy(): void {
     this._fishers.forEach((f) => f.destroy());
+  }
+
+  public serialize(): SerializedBoat {
+    return {
+      position: {
+        x: this.container.position.x,
+        y: this.container.position.y,
+      },
+      rotation: this.container.rotation,
+      boatDef: this.boatDef,
+      inventory: this.inventory,
+    };
   }
 }

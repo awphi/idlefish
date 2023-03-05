@@ -19,7 +19,6 @@ import {
 import { worldHeight, worldWidth } from "./utils";
 import { makeViewport } from "./viewport";
 import type { Viewport } from "pixi-viewport";
-import type { IPointData } from "pixi.js";
 import { makeZoneLayer } from "./layers/zones-layer";
 import type { Zone } from "./zones";
 
@@ -133,11 +132,7 @@ export class Game {
     });
 
     this.addZone({
-      position: {
-        x: worldWidth / 2,
-        y: worldHeight / 2,
-      },
-      radius: 500,
+      circle: new PIXI.Circle(worldWidth / 2, worldHeight / 2, 500),
       color: 0x229954,
       role: "shop",
       text: "Shop",
@@ -146,7 +141,7 @@ export class Game {
 
   addBoat(
     boatDef: BoatDef,
-    pos: IPointData = { x: worldWidth / 2, y: worldHeight / 2 }
+    pos: PIXI.IPointData = { x: worldWidth / 2, y: worldHeight / 2 }
   ): void {
     const boat = new Boat(this, boatDef);
     this._boats.set(boat.container, boat);
@@ -163,6 +158,17 @@ export class Game {
   removeZone(zone: Zone) {
     this._zones.delete(zone);
     this._zoneLayer.refresh(this._zones.values());
+  }
+
+  getZonesAt(x: number, y: number): Zone[] {
+    const result: Zone[] = [];
+    this._zones.forEach((z) => {
+      if (z.circle.contains(x, y)) {
+        result.push(z);
+      }
+    });
+
+    return result;
   }
 
   removeBoat(boat: Boat): void {

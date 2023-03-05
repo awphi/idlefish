@@ -13,18 +13,18 @@ export function makeZoneLayer(): {
   function drawZone(zone: Zone) {
     g.lineStyle(8, zone.color, 0.3);
     g.beginFill(zone.color, 0.1);
-    g.drawCircle(zone.position.x, zone.position.y, zone.radius);
+    g.drawCircle(zone.circle.x, zone.circle.y, zone.circle.radius);
 
     g.endFill();
 
     const text = new PIXI.Text(zone.text, {
       fill: zone.color,
-      fontSize: zone.radius / 8,
+      fontSize: zone.circle.radius / 8,
       fontFamily: "Alagard",
     });
     text.position.set(
-      zone.position.x - text.width / 2,
-      zone.position.y - text.height / 2
+      zone.circle.x - text.width / 2,
+      zone.circle.y - text.height / 2
     );
     texts.add(text);
     container.addChild(text);

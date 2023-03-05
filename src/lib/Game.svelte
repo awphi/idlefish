@@ -6,6 +6,7 @@
   import type { Boat } from "./game/boat";
   import { BOAT_DEFS } from "./game/boat-def";
   import { Game } from "./game/game-controller";
+  import { savedBoats } from "./save-state";
 
   let game: Game;
   let boats: Boat[] = [];
@@ -52,6 +53,14 @@
       }
     });
 
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        savedBoats.set(boats.map((a) => a.serialize()));
+      }
+    });
+
+    // TODO use savedBoats to restore boats at proper positions with inventories etc.
+    // will required adding a game.fromSerializedBoat method
     game.addBoat(BOAT_DEFS.pirateShip, { x: 5200, y: 5000 });
     game.addBoat(BOAT_DEFS.pirateShip, { x: 4800, y: 5000 });
   });
@@ -74,7 +83,7 @@
 </div>
 <div class="fixed right-1 top-1">
   {#if selectedBoat !== null}
-    <BoatInfoPanel boat={selectedBoat} />
+    <BoatInfoPanel {game} boat={selectedBoat} />
   {/if}
 </div>
 

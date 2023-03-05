@@ -1,8 +1,7 @@
 import type * as PIXI from "pixi.js";
 
 export interface Zone {
-  position: PIXI.IPointData;
-  radius: number;
+  circle: PIXI.Circle;
   role: "shop" | "bonus";
   text: string;
   color: number;

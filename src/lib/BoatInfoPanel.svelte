@@ -4,10 +4,25 @@
   import { scale } from "svelte/transition";
   import { quintInOut } from "svelte/easing";
   import { tick } from "svelte";
+  import type { Game } from "./game/game-controller";
+  import type { Fish } from "./game/fish";
+  import { savedBalance } from "./save-state";
 
   export let boat: Boat;
+  export let game: Game;
+
+  function sellFish(fish: Fish): void {
+    if (boat.removeFish(fish)) {
+      savedBalance.update((v) => v + fish.score);
+      // TODO sound effect
+    }
+  }
 
   let inventoryElement: HTMLDivElement;
+  let isInShop: boolean;
+  $: isInShop = game
+    .getZonesAt(boat.container.x, boat.container.y)
+    .some((a) => a.role === "shop");
 
   $: if (boat.inventory) {
     tick().then(() => {
@@ -63,10 +78,12 @@
     {#each boat.inventory as fish}
       <div class="flex" transition:scale={{ easing: quintInOut }}>
         <span class="flex text-sm" style:color={fish.color}>{fish.name}</span>
-        <button
-          class="ml-auto bg-neutral-800 bg-opacity-50 px-2 rounded-md hover:contrast-125 cont disabled:contrast-75"
-          >Sell</button
-        >
+        {#if isInShop}
+          <button
+            class="ml-auto bg-neutral-800 bg-opacity-50 px-2 rounded-md hover:contrast-125 cont disabled:contrast-75"
+            on:click={() => sellFish(fish)}>Sell</button
+          >
+        {/if}
       </div>
     {/each}
   </div>
