@@ -38,11 +38,10 @@ export class Interactions {
     });
 
     app.stage.on("pointermove", (e) => {
-      if (e.target instanceof PIXI.DisplayObject) {
+      if (e.target instanceof PIXI.Container) {
         e.target.toLocal({ x: e.x, y: e.y }, app.stage, this._mousePos);
         this._isDragPathValid =
-          this._selectedBoat !== null &&
-          e.target !== this._selectedBoat.container;
+          this._selectedBoat !== null && !boats.has(e.target);
       }
     });
 

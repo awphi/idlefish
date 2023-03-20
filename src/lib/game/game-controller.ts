@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js";
 import "@pixi/math-extras";
 import waterWarpShaderSrc from "./shaders/water-warp-frag.glsl?raw";
 import pixellateShaderSrc from "./shaders/pixellate.glsl?raw";
-import { makeBackgroundWaterSprite } from "./layers/background-water-sprite";
+import { makeWaterLayer } from "./layers/water-layer";
 import { Boat } from "./boat";
 import { makeBoatIndicatorLayer } from "./layers/boat-indicator-layer";
 import {
@@ -29,8 +29,31 @@ export class Game {
   private _interactions: Interactions;
   private _events = new Events();
 
+  // Shaders and uniforms
+  private _globalUniforms = {
+    time: 0,
+    maxPixelSize: 4,
+    glintSize: 70,
+  };
+
+  private _dynamicPixellateShader = new PIXI.Filter(
+    null,
+    pixellateShaderSrc,
+    this._globalUniforms
+  );
+
+  private _waterWarpShader = new PIXI.Filter(
+    null,
+    waterWarpShaderSrc,
+    this._globalUniforms
+  );
+
   // Layers are in ascending order
-  private _waterLayer = new PIXI.Container();
+  private _waterLayer = makeWaterLayer(
+    this._globalUniforms,
+    this._dynamicPixellateShader
+  );
+
   private _zoneLayer = makeZoneLayer();
   private _boatIndicationLayer = makeBoatIndicatorLayer();
   private _fishingLineLayer: FishingLineLayer;
@@ -41,27 +64,12 @@ export class Game {
   private _boats: Map<PIXI.Container, Boat> = new Map();
   private _zones = new Set<Zone>();
 
-  // Shaders and uniforms
-  private _globalUniforms = {
-    time: 0,
-    maxPixelSize: 4,
-    glintSize: 70,
-  };
-
-  private _waterWarpShader = new PIXI.Filter(
-    null,
-    waterWarpShaderSrc,
-    this._globalUniforms
-  );
-
-  private _dynamicPixellateShader = new PIXI.Filter(
-    null,
-    pixellateShaderSrc,
-    this._globalUniforms
-  );
-
   public get interactions(): Interactions {
     return this._interactions;
+  }
+
+  public get waterLayer() {
+    return this._waterLayer;
   }
 
   public get viewport(): Viewport {
@@ -89,16 +97,10 @@ export class Game {
       this._globalUniforms.time += delta * 0.01;
     });
 
-    this._waterLayer.filters = [
-      //this._waterWarpShader,
-      this._dynamicPixellateShader,
-    ];
-
     this._boatIndicationLayer.graphics.filters = [this._dynamicPixellateShader];
 
     this._zoneLayer.container.filters = [this._dynamicPixellateShader];
 
-    this._waterLayer.addChild(makeBackgroundWaterSprite(this._globalUniforms));
     this._fishingLineLayer = makeFishingLineLayer(this._viewport);
     this._boatTextLayer = makeBoatTextLayer(this._app);
 

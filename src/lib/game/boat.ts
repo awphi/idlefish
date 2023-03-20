@@ -128,11 +128,11 @@ export class Boat {
 
       this._boatDef.wakeEmitters.forEach(() => {
         const emitter = new particles.Emitter(
-          game.viewport,
+          game.waterLayer,
           particles.upgradeConfig(wakeParticlesEmitterDef, [PIXI.Texture.WHITE])
         );
 
-        emitter.emit = false;
+        //emitter.emit = false;
         this._wakeEmitters.push(emitter);
         this.setFishingStatus("out");
       });
@@ -190,7 +190,7 @@ export class Boat {
         y: wy * this.container.height,
       };
       // This works as wake emitters live on the global stage
-      this._game.viewport.toLocal(p, this.container, point);
+      this._game.waterLayer.toLocal(p, this.container, point);
       e.updateSpawnPos(point.x, point.y);
       e.rotate(this.container.rotation);
     });
